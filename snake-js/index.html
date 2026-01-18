@@ -196,7 +196,8 @@
             if (orange !== null) {
                 if (snakePosition.x === orange.position.x && snakePosition.y === orange.position.y) {
                     orange.eat();
-                    if (timeDifficulty > 160) timeDifficulty -= 10;
+                    if (timeDifficulty > 150) timeDifficulty -= 10;
+                    console.log(timeDifficulty);
                     orange = null;
                 }
             }
