@@ -16,16 +16,32 @@
         align-items: center;
     }
 
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #points {
+        width: 150px;
+        height: 75px;
+        text-align: center;
+        font-size: 50px;
+        color: black;
+        background-color: wheat;
+        margin-bottom: 50px;
+        border: 5px dashed black;
+    }
+
     #mainCanvas {
-        /* border: 2px solid green; */
         border: 2px solid #763b36;
     }
 </style>
 
 <body>
-
-    <canvas id="mainCanvas" width="1024" height="768">
-    </canvas>
+    <div class="game-container">
+        <p id="points">0</p>
+        <canvas id="mainCanvas" width="1024" height="768"></canvas>
     <script>
         class Vector2 {
             constructor(x, y) {
@@ -97,13 +113,14 @@
         }
         class Orange {
             constructor() {
-                this.position = new Vector2();
+                this.position = new Vector2(0, 0);
                 this.position.x = Math.floor((Math.random() * (WIDTH / TILE_SIZE - 2)) + 1);
                 this.position.y = Math.floor((Math.random() * (HEIGHT / TILE_SIZE - 2)) + 1);
                 this.points = 50;
             }
             eat() {
                 bodyList.insert(snakeLastPosition.x, snakeLastPosition.y);
+                points += this.points;
             }
             draw() {
                 ctx.drawImage(orangeSprite.sprite, this.position.x * TILE_SIZE, this.position.y * TILE_SIZE);
@@ -116,12 +133,17 @@
             }
         }
 
+        const scoreboard = document.getElementById("points");
         const canvas = document.getElementById("mainCanvas");
         const ctx = canvas.getContext("2d");
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
         const TILE_SIZE = 64;
+
+        let running = true;
+        let points = 0;
+        let timeDifficulty = 250;
 
         const cols = WIDTH / TILE_SIZE;
         const rows = HEIGHT / TILE_SIZE;
@@ -174,12 +196,14 @@
             if (orange !== null) {
                 if (snakePosition.x === orange.position.x && snakePosition.y === orange.position.y) {
                     orange.eat();
+                    if (timeDifficulty > 160) timeDifficulty -= 10;
                     orange = null;
                 }
             }
             else {
                 orange = new Orange();
-            }
+            } 
+            scoreboard.textContent = points;
 
             snakeLastPosition.x = snakePosition.x;
             snakeLastPosition.y = snakePosition.y;
@@ -188,19 +212,19 @@
             bodyList.updateList();
         }
 
-        function BreakGame(interval) {
+        function Collision() {
             // Wall
             if (snakePosition.x > (WIDTH / TILE_SIZE) - 2||
-                snakePosition.x <= 0 ||
+                snakePosition.x < 1 ||
                 snakePosition.y > (HEIGHT / TILE_SIZE) - 2||
-                snakePosition.y <= 0) {
+                snakePosition.y < 1) {
 
                 console.log("GAME OVER");
-                clearInterval(interval);
+                running = false;
             }
             if (bodyList.checkCollision()) {
                 console.log("GAME OVER");
-                clearInterval(interval);
+                running = false;
             }
         }
 
@@ -250,17 +274,16 @@
                 ctx.drawImage(snakeRight.sprite, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
         }
 
-        // Main loop
-        Promise.all([
-            new Promise(r => ground.sprite.onload = r),
-            new Promise(r => snakeFront.sprite.onload = r)
-        ]).then(() => {
-            const mainLoop = setInterval(() => {
-                Player();
-                Draw();
-                BreakGame(mainLoop);
-            }, 250);
-        });
+        function Main() {
+            if (!running) return;
+            
+            Player();
+            Draw();
+            Collision();
+            setTimeout(Main, timeDifficulty);
+        }
+
+        Main();
 
 
     </script>
