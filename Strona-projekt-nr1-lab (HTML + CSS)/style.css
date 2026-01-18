@@ -18,7 +18,7 @@ body {
     background-color: var(--bg-dark);
     font-family: 'Rajdhani', sans-serif;
     color: var(--text-light);
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-x: hidden; /* Blokowanie przewijania poziomego */
     line-height: 1.6;
 }
 
@@ -123,7 +123,7 @@ p.quote {
     left: -10px;
 }
 
-/* Hover effect on dot */
+/* Hover dot */
 .timeline-item:hover::after {
     background-color: var(--accent-secondary);
     transform: scale(1.3);
