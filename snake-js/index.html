@@ -10,13 +10,15 @@
     body {
         margin: 0;
         height: 100vh;
+        background-color: #763b36;
         display: flex;
         justify-content: center;
         align-items: center;
     }
 
     #mainCanvas {
-        border: 2px solid green;
+        /* border: 2px solid green; */
+        border: 2px solid #763b36;
     }
 </style>
 
@@ -80,23 +82,37 @@
             drawBody() {
                 let current = this.head;
                 while (current) {
-                    ctx.drawImage(snakeBody, current.x * TILE_SIZE, current.y * TILE_SIZE);
+                    ctx.drawImage(snakeBody.sprite, current.x * TILE_SIZE, current.y * TILE_SIZE);
                     current = current.next;
                 }
+            }
+            checkCollision() {
+                let current = this.head;
+                while (current) {
+                    if (snakePosition.x === current.x && snakePosition.y === current.y) return true;
+                    current = current.next;
+                }
+                return false;
             }
         }
         class Orange {
             constructor() {
                 this.position = new Vector2();
-                this.position.x = Math.floor((Math.random() * (WIDTH / 32 - 2)) + 1);
-                this.position.y = Math.floor((Math.random() * (HEIGHT / 32 - 2)) + 1);
+                this.position.x = Math.floor((Math.random() * (WIDTH / TILE_SIZE - 2)) + 1);
+                this.position.y = Math.floor((Math.random() * (HEIGHT / TILE_SIZE - 2)) + 1);
                 this.points = 50;
             }
             eat() {
                 bodyList.insert(snakeLastPosition.x, snakeLastPosition.y);
             }
             draw() {
-                ctx.drawImage(orangeSprite, this.position.x * TILE_SIZE, this.position.y * TILE_SIZE);
+                ctx.drawImage(orangeSprite.sprite, this.position.x * TILE_SIZE, this.position.y * TILE_SIZE);
+            }
+        }
+        class Sprite {
+            constructor(path) {
+                this.sprite = new Image(TILE_SIZE, TILE_SIZE);
+                this.sprite.src = path;
             }
         }
 
@@ -105,31 +121,28 @@
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
-        const TILE_SIZE = 32;
+        const TILE_SIZE = 64;
 
         const cols = WIDTH / TILE_SIZE;
         const rows = HEIGHT / TILE_SIZE;
 
-        const orangeSprite = new Image(TILE_SIZE, TILE_SIZE);
-        orangeSprite.src = "assets/orange.png"
+        const orangeSprite = new Sprite("assets/orange.png");
+        
+        const ground = new Sprite("assets/ground.png");
+        const wallTop = new Sprite("assets/walls/top.png");
+        const wallBottom = new Sprite("assets/walls/bottom.png");
+        const wallRight = new Sprite("assets/walls/right.png");
+        const wallLeft = new Sprite("assets/walls/left.png");
+        const wallBottomLeftCorner = new Sprite("assets/walls/bottom-left.png");
+        const wallBottomRightCorner = new Sprite("assets/walls/bottom-right.png");
+        const wallTopLeftCorner = new Sprite("assets/walls/top-left.png");
+        const wallTopRightCorner = new Sprite("assets/walls/top-right.png");
 
-        const wallSprite = new Image(TILE_SIZE, TILE_SIZE);
-        wallSprite.src = "assets/wall.png";
-
-        const snakeBody = new Image(TILE_SIZE, TILE_SIZE);
-        snakeBody.src = "assets/snake_body.png";
-
-        const snakeFront = new Image(TILE_SIZE, TILE_SIZE);
-        snakeFront.src = "assets/snake_front.png";
-
-        const snakeBack = new Image(TILE_SIZE, TILE_SIZE);
-        snakeBack.src = "assets/snake_back.png";
-
-        const snakeLeft = new Image(TILE_SIZE, TILE_SIZE);
-        snakeLeft.src = "assets/snake_left.png";
-
-        const snakeRight = new Image(TILE_SIZE, TILE_SIZE);
-        snakeRight.src = "assets/snake_right.png";
+        const snakeBody = new Sprite("assets/snake/snake_body.png");
+        const snakeFront = new Sprite("assets/snake/snake_front.png");
+        const snakeBack = new Sprite("assets/snake/snake_back.png");
+        const snakeLeft = new Sprite("assets/snake/snake_left.png");
+        const snakeRight = new Sprite("assets/snake/snake_right.png");
 
         let snakePosition = new Vector2(4, 5);
         let snakeLastPosition = new Vector2(0, 0);
@@ -167,7 +180,6 @@
             else {
                 orange = new Orange();
             }
-            
 
             snakeLastPosition.x = snakePosition.x;
             snakeLastPosition.y = snakePosition.y;
@@ -176,48 +188,77 @@
             bodyList.updateList();
         }
 
+        function BreakGame(interval) {
+            // Wall
+            if (snakePosition.x > (WIDTH / TILE_SIZE) - 2||
+                snakePosition.x <= 0 ||
+                snakePosition.y > (HEIGHT / TILE_SIZE) - 2||
+                snakePosition.y <= 0) {
+
+                console.log("GAME OVER");
+                clearInterval(interval);
+            }
+            if (bodyList.checkCollision()) {
+                console.log("GAME OVER");
+                clearInterval(interval);
+            }
+        }
+
         function Draw() {
             ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
+            // ground and obstacles
+            for (let x = 0; x < WIDTH; x += TILE_SIZE) {
+                for (let y = 0; y < HEIGHT; y += TILE_SIZE) {
+                    ctx.drawImage(ground.sprite, x, y);
+                }
+            }
+
             // Walls
             for (let y = 0; y < HEIGHT; y += TILE_SIZE) {
-                ctx.drawImage(wallSprite, 0, y);
-                ctx.drawImage(wallSprite, WIDTH - TILE_SIZE, y);
+                ctx.drawImage(wallLeft.sprite, 0, y);
+                ctx.drawImage(wallRight.sprite, WIDTH - TILE_SIZE, y);
             }
             for (let x = 0; x < WIDTH; x += TILE_SIZE) {
-                ctx.drawImage(wallSprite, x, 0);
-                ctx.drawImage(wallSprite, x, HEIGHT - TILE_SIZE);
+                ctx.drawImage(wallTop.sprite, x, 0);
+                ctx.drawImage(wallBottom.sprite, x, HEIGHT - TILE_SIZE);
             }
+            // Corners
+            ctx.drawImage(wallBottomLeftCorner.sprite, 0, HEIGHT - TILE_SIZE);
+            ctx.drawImage(wallBottomRightCorner.sprite, WIDTH - TILE_SIZE, HEIGHT - TILE_SIZE);
+
+            ctx.drawImage(wallTopRightCorner.sprite, WIDTH - TILE_SIZE, 0);
+            ctx.drawImage(wallTopLeftCorner.sprite, 0, 0);
+            
+            if (orange !== null) orange.draw();
+            bodyList.drawBody(); // DRAW BODY
 
             // FRONT
             if (direction.y === -1 && direction.x === 0)
-                ctx.drawImage(snakeFront, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
+                ctx.drawImage(snakeFront.sprite, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
 
             // DOWN
             if (direction.y === 1 && direction.x === 0)
-                ctx.drawImage(snakeBack, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
+                ctx.drawImage(snakeBack.sprite, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
 
             // LEFT
             if (direction.x === -1 && direction.y === 0)
-                ctx.drawImage(snakeLeft, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
+                ctx.drawImage(snakeLeft.sprite, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
 
             // RIGHT
             if (direction.x === 1 && direction.y === 0)
-                ctx.drawImage(snakeRight, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
-
-            // DRAW BODY
-            if(orange !== null) orange.draw();
-            bodyList.drawBody();
+                ctx.drawImage(snakeRight.sprite, snakePosition.x * TILE_SIZE, snakePosition.y * TILE_SIZE);
         }
 
-        // Start game
+        // Main loop
         Promise.all([
-            new Promise(r => wallSprite.onload = r),
-            new Promise(r => snakeFront.onload = r)
+            new Promise(r => ground.sprite.onload = r),
+            new Promise(r => snakeFront.sprite.onload = r)
         ]).then(() => {
-            setInterval(() => {
+            const mainLoop = setInterval(() => {
                 Player();
                 Draw();
+                BreakGame(mainLoop);
             }, 250);
         });
 
