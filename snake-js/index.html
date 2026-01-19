@@ -166,7 +166,7 @@
         const snakeLeft = new Sprite("assets/snake/snake_left.png");
         const snakeRight = new Sprite("assets/snake/snake_right.png");
 
-        let snakePosition = new Vector2(4, 5);
+        let snakePosition = new Vector2(2, 3);
         let snakeLastPosition = new Vector2(0, 0);
         let direction = new Vector2(1, 0);
 
@@ -219,12 +219,9 @@
                 snakePosition.x < 1 ||
                 snakePosition.y > (HEIGHT / TILE_SIZE) - 2||
                 snakePosition.y < 1) {
-
-                console.log("GAME OVER");
                 running = false;
             }
             if (bodyList.checkCollision()) {
-                console.log("GAME OVER");
                 running = false;
             }
         }
@@ -276,16 +273,18 @@
         }
 
         function Main() {
-            if (!running) return;
+            if (!running) {
+                if (confirm("GAME OVER\nTry again?")) window.location.reload();
+                return;
+            }
             
             Player();
             Draw();
             Collision();
             setTimeout(Main, timeDifficulty);
         }
-
         Main();
-
+        
 
     </script>
 </body>
